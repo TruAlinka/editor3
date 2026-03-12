@@ -36,12 +36,11 @@
     <div class="section-title">Задания</div>
     <div class="tasks-edit" id="tasks-edit"></div>
     <button class="add-btn" onclick="addTask()">+ Добавить задание</button>
-    
     <div class="section-title">Настройки</div>
     <div class="opts">
       <label>Режим:
         <select id="game-mode" onchange="updateSettings()">
-          <option value="order">Drag&Drop буквы</option>
+          <option value="order">Drag&amp;Drop буквы</option>
           <option value="input">Печатать слово</option>
         </select>
       </label>
@@ -63,14 +62,12 @@
     <div class="section-title">Или полный HTML для скачивания:</div>
     <textarea id="html-code" readonly></textarea>
     <button class="copy-btn" onclick="copyHTML()">Скопировать HTML</button>
-    <div class="small">Откройте отдельно или разместите на github/pages</div>
   </div>
   <div class="main-preview">
-    <div class="section-title">Предпросмотр:</div>
+    <div class="section-title" style="margin-bottom:10px;">Предпросмотр:</div>
     <iframe class="iframe-preview" id="game-preview"></iframe>
   </div>
 </div>
-
 <script>
 // ==== ДАННЫЕ: редактируем в редакторе ====
 let settings = {
@@ -114,7 +111,12 @@ function editTaskAns(i,val){ tasks[i].answer=val; updateAll(); }
 function delTask(i){ tasks.splice(i,1); updateAll(); }
 function addTask(){
   tasks.push({lang:"ru", img:"", definition:"", answer:""});
+  renderTaskTable();
   updateAll();
+  setTimeout(() => {
+    let inputs = document.querySelectorAll('.tasks-edit .tasks-row:last-child input[type="text"]');
+    if(inputs[0]) inputs[0].focus();
+  }, 50);
 }
 function updateSettings(){
   settings.mode = document.getElementById('game-mode').value;
@@ -125,9 +127,8 @@ function updateSettings(){
   updateAll();
 }
 
-// ===== ГЕНЕРАЦИЯ КОДА =====
+// ===== ГЕНЕРАЦИЯ КОДА ===== (тот же алгоритм, что и раньше)
 function generateGameCode(){
-  // Сортировка и группировка по языку
   let grouped = { ru:[], en:[] };
   for(let t of tasks){
     if(t.lang==="ru") grouped.ru.push(t);
@@ -135,9 +136,7 @@ function generateGameCode(){
   }
   let background = settings.transparent ? "transparent" : settings.background;
   let mode = settings.mode;
-  // inline "escape"
   function htmlEscape(str){return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
-  // Собираем полноценную ИГРУ по вашему последнему рабочему шаблону!
   return `<!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -146,10 +145,7 @@ function generateGameCode(){
   <link href="https://fonts.googleapis.com/css?family=Montserrat:700,400&display=swap" rel="stylesheet">
   <style>
     :root { --game-bg: ${htmlEscape(background)}; }
-    body {
-      background: var(--game-bg);
-      font-family:'Montserrat',sans-serif; margin:0; min-height: 100vh;
-    }
+    body { background: var(--game-bg); font-family:'Montserrat',sans-serif; margin:0; min-height: 100vh;}
     #game-root { margin-top: 35px; max-width: 820px; margin-left: auto; margin-right: auto;}
     .tasks { display: flex; flex-wrap: wrap; gap: 12px; justify-content:center;}
     .task-tile { background: #fff; box-shadow:0 3px 8px #0001; border-radius: 14px; padding: 16px; width: 174px; text-align:center; cursor:pointer; position:relative; transition:.2s;}
@@ -249,8 +245,6 @@ function openTask(ix){
   if(gameMode==='order') renderOrderTask(ix);
   else renderInputTask(ix);
 }
-
-// --- Drag&Drop (глобально)
 let dndState = {}; let activeIxForDND = null;
 function renderOrderTask(ix){
   let t=tasks[ix]; let answer=t.answer;
@@ -325,8 +319,6 @@ function checkAnswerDND(ix){
     if(userWord===answer)positiveResult(ix);
   }
 }
-// --- /Drag&Drop ---
-
 function renderInputTask(ix){
   let t=tasks[ix];
   let html='<div style="margin:12px;">'+(userLang==='ru'?'Введите слово:':'Type the word:')+'</div><input id="user-input" type="text" maxlength="'+(t.answer.length+2)+'" style="font-size:21px;padding:5px;max-width:200px;text-align:center;border-radius:6px;border:1px solid #ccc;"/><br><br><button onclick="checkInputAnswer('+ix+')">'+(userLang==='ru'?'Проверить':'Check')+'</button>';
@@ -359,17 +351,13 @@ window.markSelf=function(ix){manualScale[ix]=!manualScale[ix];checkWin();};
 // -------- UI связка ---------
 function updateAll(){
   renderTaskTable();
-  // собрать html-игру:
   let html = generateGameCode();
   let blobURL = URL.createObjectURL(new Blob([html],{type:'text/html'}));
-  // предпросмотр
   document.getElementById('game-preview').src = blobURL;
-
   let iframeCode = `<iframe src="${blobURL}" width="420" height="480" frameborder="0" style="background:${settings.transparent ? 'transparent':settings.background};border-radius:13px;box-shadow:0 1px 6px #0002;" allowfullscreen></iframe>`;
   document.getElementById('iframe-code').value = iframeCode;
   document.getElementById('html-code').value = html;
 }
-// — копирование —
 function copyIframe(){
   const el = document.getElementById('iframe-code');
   el.select(); el.setSelectionRange(0, 99999);
@@ -380,9 +368,7 @@ function copyHTML(){
   el.select(); el.setSelectionRange(0, 99999);
   document.execCommand('copy');
 }
-// Реакция на изменения цветов/режимов/фонов сразу
-window.updateSettings = updateSettings;
-window.addTask = addTask;
+// Инициализация редактора
 window.onload = () => { renderTaskTable(); updateAll(); };
 </script>
 </body>
